@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400&display=swap');
+    * {
+        margin: 0;
+        padding: 0;
+        font-family: 'Montserrat', sans-serif;
+        box-sizing: border-box;
+    }
+    body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background: #f4f4f4;
+    }
+    header {
+        background: linear-gradient(45deg, #6a11cb, #2575fc);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    header h1 {
+        margin: 0;
+        font-size: 24px;
+    }
+    .logout {
+        background-color: #ff4d4d;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        text-decoration: none;
+    }
+    .logout:hover {
+        background-color: #ff3333;
+    }
+    main {
+        display: flex;
+        flex: 1;
+    }
+    .chat-container {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        border-right: 2px solid #dedede;
+        background-color: #fff;
+    }
+    .rooms-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        background: linear-gradient(to bottom, #eef2f3, #8e9eab);
+        overflow-y: auto;
+        color: #333;
+    }
+    .room-btn {
+        padding: 12px;
+        margin-bottom: 15px;
+        background: linear-gradient(45deg, #6a11cb, #2575fc);
+        color: white;
+        text-align: center;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 16px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: block;
+    }
+    .room-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .title {
+        margin-bottom: 20px;
+        font-size: 28px;
+        color: #333;
+    }
+    #display {
+        flex: 1;
+        border: 2px solid #dedede;
+        background-color: #fdfdfd;
+        padding: 15px;
+        overflow-y: auto;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .container input[type=text], .container input[type=submit] {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+    }
+    .container input[type=submit] {
+        background-color: #4CAF50;
+        color: white;
+        cursor: pointer;
+    }
+    .container input[type=submit]:hover {
+        background-color: #45a049;
+    }
+    .darker {
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: #ddd;
+        border-radius: 8px;
+        word-break: break-word;
+    }
+    .darker b {
+        font-style: italic;
+        color: #333;
+    }
+    .darker span {
+        font-size: 12px;
+        color: #999;
+    }
+    footer {
+        background-color: #333;
+        color: white;
+        text-align: center;
+        padding: 10px 0;
+        font-size: 14px;
+    }
+    /* Rendre le panneau d'affichage attrayant */
+    #display {
+        flex: 1;
+        border: 2px solid #dedede;
+        background: linear-gradient(to bottom, #ffffff, #e9eef1);
+        padding: 15px;
+        overflow-y: auto;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .darker {
+        margin-bottom: 10px;
+        padding: 15px;
+        background-color: #f7f9fc;
+        border-radius: 8px;
+        word-break: break-word;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .darker b {
+        font-style: italic;
+        color: #4a4a4a;
+    }
+    .darker span {
+        font-size: 12px;
+        color: #8c8c8c;
+    }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+    <!-- En-tête -->
+    <header>
+        <h1>Plateforme de Chat</h1>
+        <a href="/logout" class="logout">Déconnexion</a>
+    </header>
+
+    <!-- Section principale -->
+    <main>
+        <div class="chat-container">
+            <h2 class="title">{{room}} - Groupe</h2>
+            <div id="display">
+                <p>Aucun message présent</p>
+            </div>
+            <div class="container">
+                <form id="post-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="username" id="username" value="{{username}}" />
+                    <input type="hidden" name="room_id" id="room_id" value="{{room_details.id}}" />
+                    <input type="text" name="encryption_key" id="encryption_key" placeholder="Clé de chiffrement (optionnel)" />
+                    <input type="text" name="message" id="message" placeholder="Entrez votre message" />
+                    <input type="submit" value="Envoyer">
+                </form>
+            </div>
+            <div class="container">
+                <input type="text" id="decryption_key" placeholder="Clé de déchiffrement" />
+            </div>
+        </div>
+
+        <div class="rooms-container">
+            <h3>Salons disponibles</h3>
+            {% for r in rooms %}
+            <a href="{% url 'room' r.name %}" class="room-btn">{{ r.name }}</a>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- Pied de page -->
+    <footer>
+        &copy; 2024 Plateforme de Chat - Tous droits réservés
+    </footer>
+
+    <script type="text/javascript">
+        $(document).on('submit', '#post-form', function(e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'POST',
+                url: '/send',
+                data: {
+                    username: $('#username').val(),
+                    room_id: $('#room_id').val(),
+                    message: $('#message').val(),
+                    encryption_key: $('#encryption_key').val(),
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val(),
+                },
+                success: function() {
+                    $('#message').val('');
+                }
+            });
+        });
+
+        setInterval(function() {
+            $.ajax({
+                type: 'GET',
+                url: "/getMessages/{{room}}/",
+                data: {
+                    decryption_key: $('#decryption_key').val()
+                },
+                success: function(response) {
+                    var display = $("#display");
+                    var isAtBottom = display.scrollTop() + display.innerHeight() >= display[0].scrollHeight;
+                    $("#display").empty();
+
+                    for (var key in response.messages) {
+                        var rawDate = new Date(response.messages[key].date);
+                        var formattedDate = rawDate.toLocaleString('fr-FR', {
+                            day: 'numeric', month: 'short', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                        var temp = `<div class='darker'><b>${response.messages[key].user}</b><p>${response.messages[key].value}</p><span>${formattedDate}</span></div>`;
+                        $("#display").append(temp);
+                    }
+
+                    if (isAtBottom) {
+                        $("#display").scrollTop($("#display")[0].scrollHeight);
+                    }
+                },
+                error: function() {
+                    alert('Une erreur s\'est produite');
+                }
+            });
+        }, 500);
+    </script>
+</body>
+</html>
